@@ -1,0 +1,58 @@
+---
+_schema-version: '3.1'
+ID: Test
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx -p @sap/cds-dk cds build --production
+
+modules:
+  - name: Test-srv
+    type: nodejs
+    path: srv #gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: db2_node1-hdidb2_node1-db-deployer-ws-jfwxw
+
+  - name: Test-db-deployer
+    type: hdb
+    path: db #gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: db2_node1-hdidb2_node1-db-deployer-ws-jfwxw
+        properties:
+          TARGET_CONTAINER: '~{hdi-service-name}'
+      - name: DB2_ACCESS
+        group: SERVICE-REPLACEMENTS
+        properties:
+          external_access: DB2_ACCESS  
+
+resources:
+  - name: db2_node1-hdidb2_node1-db-deployer-ws-jfwxw
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-name: db2_node1-hdidb2_node1-db-deployer-ws-jfwxw
+      service-plan: hdi-shared
+    properties:
+      hdi-service-name: '${service-name}'
+  - name: DB2_ACCESS
+    type: org.cloudfoundry.existing-service
+    parameters:
+      service-name: DB2_ACCESS
+    properties:
+      ups-service-name: DB2_ACCESS     

@@ -6,3 +6,13 @@ service RiskService {
   entity Mitigations as projection on my.Mitigations;
     annotate Mitigations with @odata.draft.enabled;
 }
+
+
+using REGIONS  from '../db/test';
+
+@path: 'service/my2'
+service CatalogService2 {
+
+ entity RegionTextsView
+	as projection on REGIONS;
+}
